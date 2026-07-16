@@ -1,0 +1,448 @@
+{
+  "name": "AI Lead Qualification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "eaa36e79-a6d1-4472-91c2-5a46791e90a1",
+      "name": "Webhook",
+      "webhookId": "55fc14bf-a0b3-4dc6-8ee3-84536b8f8f7e"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6497361-abb2-46c9-bdb4-4474c93a51c2",
+              "name": "=name",
+              "value": "={{$json.body.name}}",
+              "type": "string"
+            },
+            {
+              "id": "0b13d33a-e778-44b2-8ab7-2f9388c68e15",
+              "name": "=email",
+              "value": "={{$json.body.email}}",
+              "type": "string"
+            },
+            {
+              "id": "668ad3cf-7dfd-4aea-8252-50db0fee8262",
+              "name": "=company",
+              "value": "={{$json.body.company}}",
+              "type": "string"
+            },
+            {
+              "id": "f50b7786-20e4-4fba-9374-d2299a8cd6b5",
+              "name": "=website",
+              "value": "={{$json.body.website}}",
+              "type": "string"
+            },
+            {
+              "id": "dddd624d-af69-4223-8d64-d237c7ea7a40",
+              "name": "=industry",
+              "value": "={{$json.body.industry}}",
+              "type": "string"
+            },
+            {
+              "id": "dd555f4c-32a2-4030-a285-be5b8ef23d5f",
+              "name": "=employees",
+              "value": "={{$json.body.employees}}",
+              "type": "string"
+            },
+            {
+              "id": "902bc3ae-8205-41ba-8f70-aafb865aced1",
+              "name": "=country",
+              "value": "={{$json.body.country}}",
+              "type": "string"
+            },
+            {
+              "id": "3525d89c-4730-496b-87e8-f6a00cadc2d2",
+              "name": "=budget",
+              "value": "={{$json.body.budget}}",
+              "type": "string"
+            },
+            {
+              "id": "bf5228d8-e444-4684-9346-be8b22a92d30",
+              "name": "=message",
+              "value": "={{$json.body.message}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "547fdb73-4590-4364-aa23-4456849319a7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AQ.Ab8RN6Iu_mBPAJUepFmUATxeiVQ-_3ujcsBw9n93svOwavnDnA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"You are an AI Sales Qualification Assistant.\\n\\nAnalyze the lead below.\\n\\nName: {{$json.name}}\\nCompany: {{$json.company}}\\nWebsite: {{$json.website}}\\nIndustry: {{$json.industry}}\\nEmployees: {{$json.employees}}\\nCountry: {{$json.country}}\\nBudget: {{$json.budget}}\\nEmail: {{$json.email}}\\nMessage: {{$json.message}}\\n\\nReturn ONLY valid JSON:\\n{\\n\\\"lead_score\\\": 0,\\n\\\"lead_type\\\": \\\"Hot | Warm | Cold\\\",\\n\\\"budget_level\\\": \\\"High | Medium | Low\\\",\\n\\\"summary\\\": \\\"Short summary\\\",\\n\\\"recommended_action\\\": \\\"Next best action\\\"\\n}\\n\\nRules:\\n- Return ONLY JSON.\\n- No markdown.\\n- No explanations.\\n- lead_score must be between 0 and 100.\\n- lead_type must be ONLY Hot, Warm or Cold.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "82cfd263-5e81-40f8-abe6-f78992316342",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $input.first().json;\nconst aiText = lead.candidates[0].content.parts[0].text;\nconst ai = JSON.parse(aiText);\n\nconst form = $('Edit Fields').first().json;\n\nreturn [{\n  json: {\n    ...form,\n\n    lead_score: ai.lead_score,\n    lead_type: ai.lead_type,\n    budget_level: ai.budget_level,\n    summary: ai.summary,\n    recommended_action: ai.recommended_action\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "3dad4d93-72cf-4ff8-ba2a-679e0767e46d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.lead_type}}",
+                    "rightValue": "Hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f166bed7-a7db-468d-8639-7930d034f153"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "27341b93-3950-4843-a999-8868c1a83414",
+                    "leftValue": "={{$json.lead_type}}",
+                    "rightValue": "Warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Warm"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9f3504fc-d375-46c0-8514-8a610dc00495",
+                    "leftValue": "={{$json.lead_type}}",
+                    "rightValue": "Cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cold"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        -16
+      ],
+      "id": "508a799f-4432-477b-bb80-9d49da650686",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "6512127938",
+        "text": "=🔥 NEW HOT LEAD\n\n👤 Name:\n{{$json.name}}\n\n🏢 Company:\n{{$json.company}}\n\n📧 Email:\n{{$json.email}}\n\n🌍 Country:\n{{$json.country}}\n\n💰 Budget:\n${{$json.budget}}\n\n⭐ Lead Score:\n{{$json.lead_score}} / 100\n\n📊 Budget Level:\n{{$json.budget_level}}\n\n📝 Summary:\n{{$json.summary}}\n\n🎯 Recommended Action:\n{{$json.recommended_action}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        -128
+      ],
+      "id": "0d037cb4-de39-4db2-96e4-ea65462daf8d",
+      "name": "Send a text message",
+      "webhookId": "a048425e-99a8-409d-93fa-c55720814536",
+      "credentials": {
+        "telegramApi": {
+          "id": "7g3qYYDfRywaqiER",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{$json.name}}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{$json.email}}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{$json.company}}"
+            },
+            {
+              "fieldId": "website",
+              "fieldValue": "={{$json.website}}"
+            },
+            {
+              "fieldId": "industry",
+              "fieldValue": "={{$json.industry}}"
+            },
+            {
+              "fieldId": "employees",
+              "fieldValue": "={{$json.employees}}"
+            },
+            {
+              "fieldId": "country",
+              "fieldValue": "={{$json.country}}"
+            },
+            {
+              "fieldId": "budget",
+              "fieldValue": "={{$json.budget}}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{$json.message}}"
+            },
+            {
+              "fieldId": "lead_score",
+              "fieldValue": "={{$json.lead_score}}"
+            },
+            {
+              "fieldId": "lead_type",
+              "fieldValue": "={{$json.lead_type}}"
+            },
+            {
+              "fieldId": "budget_level",
+              "fieldValue": "={{$json.budget_level}}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{$json.summary}}"
+            },
+            {
+              "fieldId": "recommended action",
+              "fieldValue": "={{$json.recommended_action}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "7d4c1dab-00d3-4fd1-bbdd-f259a2adf72c",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "LEaDA4PFa9Ugcklo",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"lead_type\": \"{{$json.lead_type}}\",\n  \"lead_score\": \"{{$json.lead_score}}\",\n  \"stored\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "6a1eac6f-4015-4e1f-bc2e-5e17822ad046",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b13899e5-4b2b-4f39-8d24-d5720dca330b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cc2ce1497fea5ef495c4fc759ceafe1145b1ecced76f0b3cadc9843ca9ce88bd"
+  },
+  "nodeGroups": [],
+  "id": "awgPDkd5Jfr5I7kD",
+  "tags": []
+}
