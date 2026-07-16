@@ -106,7 +106,19 @@ The workflow automatically:
 - alerts the sales team via Telegram for high-value opportunities
 
 ---
+## Screenshots
 
+### Workflow
+
+![Workflow](screenshots/workflow.png.png)
+
+### Telegram Notification
+
+![Telegram](screenshots/telegram.png.png)
+
+### Supabase Database
+
+![Supabase](screenshots/supabase.png.png)
 ## Author
 
 Built by Beksultan
