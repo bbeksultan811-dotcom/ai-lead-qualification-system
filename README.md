@@ -121,4 +121,4 @@ The workflow automatically:
 ![Supabase](screenshots/supabase.png.png)
 ## Author
 
-Built by Beksultan
+Built by Farangiz
